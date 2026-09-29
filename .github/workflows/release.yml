@@ -1,0 +1,39 @@
+name: Publish developer preview release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/release.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Verify release does not already exist
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view v0.1.0-preview >/dev/null 2>&1; then
+            echo "Release v0.1.0-preview already exists; not overwriting."
+            exit 0
+          fi
+      - name: Create source-only developer preview
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view v0.1.0-preview >/dev/null 2>&1; then
+            echo "Release already exists."
+            exit 0
+          fi
+          gh release create v0.1.0-preview \
+            --target "${GITHUB_SHA}" \
+            --title "Nila OS v0.1.0 — Developer Preview" \
+            --prerelease \
+            --notes-file RELEASE_NOTES.md
